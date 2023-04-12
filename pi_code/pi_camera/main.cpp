@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     findContours(G4, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
     vector<Moments> moments(contours.size());
     for (size_t i = 0; i < contours.size(); i++) {
-        moments[i] = moments(contours[i], false);
+        moments[i] = cv::moments(contours[i], false);
     }
 
     // 提取质心坐标
