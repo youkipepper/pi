@@ -9,7 +9,7 @@ using namespace cv;
 int main(int argc, char** argv)
 {
     // 读取图像
-    Mat G3 = imread(argv[1]);
+    Mat G3 = imread("/home/youki/Desktop/pi/pi_code/pi_camera/test.jpg");
 
     // 将图像转换为二值化图像
     Mat G4;
