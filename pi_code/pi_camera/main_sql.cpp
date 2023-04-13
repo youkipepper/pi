@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <mysql.h>
@@ -7,29 +6,31 @@
 using namespace std;
 using namespace cv;
 
-#define HOST "localhost"
-#define USER "root"
-#define PWD "password"
-#define DB_NAME "mydatabase"
-
 int main(int argc, char** argv) {
-    // 创建MySQL连接
-    MYSQL* conn = mysql_init(0);
-    conn = mysql_real_connect(conn, HOST, USER, PWD, DB_NAME, 0, NULL, 0);
-    if (conn) {
-        cout << "MySQL connection established." << endl;
-    } else {
-        cout << "Failed to connect to MySQL." << endl;
+    // 连接MySQL数据库
+    MYSQL* conn = mysql_init(NULL);
+    if (!conn) {
+        cout << "Failed to initialize MySQL." << endl;
+        return -1;
+    }
+    string db_host = "YOUR_HOST";
+    string db_user = "YOUR_USERNAME";
+    string db_password = "YOUR_PASSWORD";
+    string db_name = "YOUR_DATABASE_NAME";
+    if (!mysql_real_connect(conn, db_host.c_str(), db_user.c_str(), db_password.c_str(), db_name.c_str(), 0, NULL, 0)) {
+        cout << "Failed to connect MySQL." << endl;
         return -1;
     }
 
-    // 打开相机
-    VideoCapture cap(0);
+    // 打开网络相机
+    string url = "YOUR_CAMERA_URL"; // 替换为您的相机URL
+    VideoCapture cap(url);
     if (!cap.isOpened()) {
         cout << "Failed to open camera." << endl;
         return -1;
     }
 
+    // 循环读取每一帧图像并计算质心
     while (true) {
         // 获取下一帧
         Mat frame;
@@ -38,21 +39,46 @@ int main(int argc, char** argv) {
             break;
         }
 
-        // 将图像转换为二值图像
-        Mat gray;
-        cvtColor(frame, gray, COLOR_BGR2GRAY);
-        threshold(gray, gray, 0, 255, THRESH_BINARY);
+        // 将图像转换为二值化图像
+        Mat binary;
+        cvtColor(frame, binary, COLOR_BGR2GRAY);
+        threshold(binary, binary, 0, 255, THRESH_BINARY);
 
-        // 查找轮廓
+        // 计算区域属性
         vector<vector<Point>> contours;
-        findContours(gray, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
-
-        // 计算质心并将结果上传到MySQL
+        findContours(binary, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
+        vector<Moments> moments(contours.size());
         for (size_t i = 0; i < contours.size(); i++) {
-            Moments m = cv::moments(contours[i], false);
-            Point2f centroid(m.m10 / m.m00, m.m01 / m.m00);
-            string query = "INSERT INTO centroids (x, y) VALUES (" + to_string(centroid.x) + ", " + to_string(centroid.y) + ")";
-            mysql_query(conn, query.c_str());
+            moments[i] = cv::moments(contours[i], false);
+        }
+
+        // 提取质心坐标
+        vector<Point2f> centroids(contours.size());
+        for (size_t i = 0; i < contours.size(); i++) {
+            centroids[i] = Point2f(static_cast<float>(moments[i].m10 / moments[i].m00),
+                                    static_cast<float>(moments[i].m01 / moments[i].m00));
+        }
+
+        // 将质心坐标上传到MySQL数据库中
+        MYSQL_RES* res;
+        MYSQL_FIELD* field;
+        MYSQL_ROW row;
+        string query = "INSERT INTO centroids(x, y) VALUES ";
+        for (size_t i = 0; i < centroids.size(); i++) {
+            query += "(" + to_string(centroids[i].x) + "," + to_string(centroids[i].y) + ")";
+            if (i != centroids.size() - 1) {
+                query += ",";
+            }
+        }
+        if (mysql_query(conn, query.c_str())) {
+            cout << "Failed to insert data into database." << endl;
+        } else {
+            cout << "Data inserted into database." << endl;
+        }
+
+        // 在图像上显示质心
+        for (size_t i = 0; i < centroids.size(); i++) {
+            circle(frame, centroids[i], 5, Scalar(0, 0, 255), -1);
         }
 
         // 显示图像
@@ -64,7 +90,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    // 关闭相机和MySQL连接
+    // 关闭相机和MySQL数据库连接
     cap.release();
     mysql_close(conn);
     return 0;
