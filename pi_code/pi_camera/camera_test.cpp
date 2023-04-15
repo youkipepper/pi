@@ -5,7 +5,7 @@ using namespace cv;
 using namespace std;
 
 int main() {
-    string path = "rtsp://192.168.137.135/11";
+    string path = "rstp://192.168.1.154:8554/stream1";
     VideoCapture cap(path);
 
     if (!cap.isOpened()) {

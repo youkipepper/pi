@@ -8,7 +8,7 @@ using namespace cv;
 
 int main(int argc, char** argv) {
     // 打开网络相机
-    string url = "YOUR_CAMERA_URL"; // 替换为您的相机URL
+    string url = "rtsp://192.168.1.154:8554/stream0"; // 替换为您的相机URL
     VideoCapture cap(url);
     if (!cap.isOpened()) {
         cout << "Failed to open camera." << endl;

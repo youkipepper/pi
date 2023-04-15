@@ -5,7 +5,7 @@ import math
 import os
 
 # 读取摄像机
-path = "rtsp://192.168.137.135/11"
+path = "rtsp://192.168.1.154/11"
 cap = cv.VideoCapture(path)
 i = 0
 while True:
