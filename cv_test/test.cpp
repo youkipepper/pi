@@ -8,7 +8,7 @@ using namespace cv;
 
 int main()
 {
-  Mat img = imread("/Users/youkipepper/Desktop/pi/cv_test/test.jpg");
+  Mat img = imread("./test.jpg");
   imshow("test", img);
 
   waitKey(0);

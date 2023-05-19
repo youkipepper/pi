@@ -10,7 +10,7 @@ using namespace cv;
 
 int main(int argc, char** argv)
 {
-    // 连接到MySQL数据库
+    // 连接到MySQL数据库pkg
     sql::mysql::MySQL_Driver* driver;
     sql::Connection* conn;
     sql::Statement* stmt;
