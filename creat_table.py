@@ -1,53 +1,84 @@
+import mysql.connector as mysql
 import pandas as pd
-import pymysql
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
-# 连接MySQL数据库
-conn = pymysql.connect(
-    host='localhost',  # MySQL服务器地址
-    user='root',  # 用户名
-    password='password',  # 密码
-    database='test'  # 数据库名称
-)
+# 模板表连接信息
+template_db_info = {
+    'host': '123.60.191.124',
+    'user': 'root',
+    'password': 'Hzk2022@',
+    'database': 'bridge'
+}
 
-# 模板表格名称
-template_table_name = 'hzk_analyzed_data_template'
+# 生成表格连接信息
+table_db_info = {
+    'host': '123.60.191.124',
+    'user': 'root',
+    'password': 'Hzk2022@',
+    'database': 'hhu_int_lab'
+}
 
-# 定义函数，生成表格并插入到MySQL中
+# 模板表名
+template_table_name = 'hzk_analyzed_data'
+
+# 生成表格的函数
+
+
 def generate_tables():
-    # 获取当前时间所在周的日期范围
-    today = datetime.now()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
-
-    # 生成7个新表格，并插入到MySQL中
-    for i in range(7):
-        date_str = (start_of_week + timedelta(days=i)).strftime('%Y%m%d')
-        new_table_name = 'hzk_analyzed_data_' + date_str
-
-        # 创建新表格
-        sql_create_table = f'''
-            CREATE TABLE {new_table_name} LIKE {template_table_name}
-        '''
-        with conn.cursor() as cursor:
-            cursor.execute(sql_create_table)
-
-        # 获取模板表格的数据，并修改日期列为当前日期
-        df = pd.read_sql(f'SELECT * FROM {template_table_name}', con=conn)
-        df['date'] = (start_of_week + timedelta(days=i)).strftime('%Y-%m-%d')
-
-        # 将修改后的数据插入到新表格中
-        df.to_sql(new_table_name, con=conn, if_exists='append', index=False)
-
-    # 打印消息，表明已经生成了新的表格
-    print('Tables generated successfully.')
-
-# 定义触发器函数，每周五下午3点运行生成表格函数
-def trigger_function():
+    # 获取当前日期和时间
     now = datetime.now()
-    if now.weekday() == 4 and now.hour == 15 and now.minute == 0 and now.second == 0:
-        generate_tables()
 
-# 循环运行触发器函数
+    # 如果今天不是星期一或者现在不到早上8点，则退出函数
+    # if now.weekday() != 4 or now.hour != 21 or now.minute != 17:
+    if now.weekday() != 4:
+        print("It is not correct time. Current time is:", now)
+        return
+
+    # 连接模板表数据库
+    template_conn = mysql.connect(**template_db_info)
+    if template_conn.is_connected():
+        print("Connected to Template Table DB!")
+
+    try:
+        with template_conn.cursor() as cursor:
+            # 查询模板表格的结构
+            sql = 'SHOW CREATE TABLE {}'.format(template_table_name)
+            cursor.execute(sql)
+            table_structure = cursor.fetchone()[1]
+            print(table_structure)
+
+    finally:
+        # 关闭模板表数据库连接
+        template_conn.close()
+
+    # 修改模板表格结构，去掉 AUTO_INCREMENT 和 COMMENT 部分
+    table_structure = table_structure.replace('AUTO_INCREMENT=58467527', '')
+    table_structure = table_structure.replace('COMMENT', '')
+
+    # 连接生成表格的数据库
+    table_conn = mysql.connect(**table_db_info)
+    if table_conn.is_connected():
+        print("Connected to Table DB!")
+
+    try:
+        with table_conn.cursor() as cursor:
+            for i in range(7):
+                # 计算当前表格的日期，并生成表格名字
+                table_date = now + timedelta(days=i)
+                table_name = 'table_{}'.format(table_date.strftime('%Y%m%d'))
+
+                # 使用修改后的模板表格结构创建新表格
+                create_sql = 'CREATE TABLE {} ({})'.format(
+                    table_name, table_structure)
+                cursor.execute(create_sql)
+
+        print('Tables generated successfully!')
+
+    finally:
+        # 关闭生成表格的数据库连接
+        table_conn.close()
+
+
+# 运行程序
 while True:
-    trigger_function()
+    generate_tables()
