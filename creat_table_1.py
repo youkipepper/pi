@@ -1,5 +1,6 @@
 import pymysql
 from datetime import datetime, timedelta
+import time
 
 # 生成表格连接信息
 table_db_info = {
@@ -13,11 +14,6 @@ table_db_info = {
 def generate_tables():
     # 获取当前日期和时间
     now = datetime.now()
-
-    # 如果今天不是星期一或者现在不到早上8点，则退出函数
-    if now.weekday() != 0:
-        print("It is not correct time. Current time is:", now)
-        return
 
     # 连接生成表格的数据库
     table_conn = pymysql.connect(**table_db_info)
@@ -56,4 +52,10 @@ def generate_tables():
         table_conn.close()
 
 # 运行程序
-generate_tables()
+while True:
+    now = datetime.now()
+    if now.weekday() != 0:
+        time.sleep(3600) # 睡眠1小时
+        continue
+    generate_tables()
+    time.sleep(86400) # 每日生成一次表格，睡眠24小时
