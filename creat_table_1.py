@@ -1,4 +1,4 @@
-import mysql.connector as mysql
+import pymysql
 from datetime import datetime, timedelta
 
 # 生成表格连接信息
@@ -6,7 +6,7 @@ table_db_info = {
     'host': '123.60.191.124',
     'user': 'root',
     'password': 'Hzk2022@',
-    'database': 'bridge'
+    'database': 'hhu_int_lab'
 }
 
 # 生成表格的函数
@@ -15,14 +15,13 @@ def generate_tables():
     now = datetime.now()
 
     # 如果今天不是星期一或者现在不到早上8点，则退出函数
-    # if now.weekday() != 0 or now.hour != 8 or now.minute != 0:
-    if now.weekday() != 5:
+    if now.weekday() != 0:
         print("It is not correct time. Current time is:", now)
         return
 
     # 连接生成表格的数据库
-    table_conn = mysql.connect(**table_db_info)
-    if table_conn.is_connected():
+    table_conn = pymysql.connect(**table_db_info)
+    if table_conn.open:
         print("Connected to Table DB!")
 
     try:
