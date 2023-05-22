@@ -22,8 +22,6 @@ table_db_info = {
 template_table_name = 'hzk_analyzed_data'
 
 # 生成表格的函数
-
-
 def generate_tables():
     # 获取当前日期和时间
     now = datetime.now()
@@ -68,8 +66,7 @@ def generate_tables():
                 table_name = 'table_{}'.format(table_date.strftime('%Y%m%d'))
 
                 # 使用修改后的模板表格结构创建新表格
-                create_sql = 'CREATE TABLE {} ({})'.format(
-                    table_name, table_structure)
+                create_sql = 'CREATE TABLE {} ({})'.format(table_name, table_structure)
                 cursor.execute(create_sql)
 
         print('Tables generated successfully!')
@@ -77,7 +74,6 @@ def generate_tables():
     finally:
         # 关闭生成表格的数据库连接
         table_conn.close()
-
 
 # 运行程序
 while True:
