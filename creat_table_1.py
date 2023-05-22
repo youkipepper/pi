@@ -22,14 +22,14 @@ def generate_tables():
 
     try:
         with table_conn.cursor() as cursor:
-            for i in range(7):
+            for i in range(8):
                 # 计算当前表格的日期，并生成表格名字
                 table_date = now + timedelta(days=i)
                 table_name = 'table_{}'.format(table_date.strftime('%Y%m%d'))
 
                 # 使用固定结构创建新表格
                 create_sql = f"""
-                                CREATE TABLE {table_name} (
+                                CREATE TABLE IF NOT EXISTS {table_name} (
                                     `id` INT(16) NOT NULL AUTO_INCREMENT COMMENT '序号，自增',
                                     `x_offset` DOUBLE(255,10) NOT NULL DEFAULT '0.0000000000' COMMENT '横向位移',
                                     `y_offset` DOUBLE(255,10) NOT NULL DEFAULT '0.0000000000' COMMENT '纵向位移',
